@@ -1,0 +1,14 @@
+{
+  "name": "casino-contract",
+  "version": "1.0.0",
+  "description": "A Blockchain powered casion smart contract",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "SEYIJS",
+  "license": "MIT"
+}
