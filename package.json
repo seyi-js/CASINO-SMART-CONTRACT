@@ -7,8 +7,13 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "truffle compile"
   },
   "author": "SEYIJS",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "nodemon": "^2.0.15",
+    "truffle": "^5.4.29",
+    "truffle-contract": "^3.0.6"
+  }
 }
