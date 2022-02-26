@@ -2,7 +2,7 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 contract Casino {
-    address owner;
+    address payable owner;
 
     //Minimum bet a user has to make to partipate in the game
     uint public minimumBet = 0.1 ether;
@@ -10,7 +10,7 @@ contract Casino {
     //Total amount of ether bet for this current game
     uint public totalBet;
 
-    //total bets made by users
+    //total number bets made by users
     uint public numberOfBets;
 
     //Maximum amount of bets that can be made for each game
@@ -22,14 +22,14 @@ contract Casino {
     //Winning number
     uint public winningNumber;
 
-    address[] public players;
+    address[] public  players;
 
 
     //Each number has an array of players betting on it. Associate each number with a bunch of players.
-    mapping(uint => address[]) numberBetPlayers;
+    mapping(uint => address[]) public numberBetPlayers;
 
     //The number that each player has bet on
-    mapping(address => uint) playerBetsNumber;
+    mapping(address => uint) public playerBetsNumber;
 
 
     modifier onEndGame(){
@@ -42,7 +42,7 @@ contract Casino {
 
         require(_minimumBet > 0, "Minimum bet must be greater than 0.");
         require(_maximumAmountOfBets > 0 && _maximumAmountOfBets <= BETS_LIMIT, "Maximum amount od bet must be greater than 0.");
-        owner = msg.sender;
+        owner = payable(msg.sender);
         minimumBet = _minimumBet;
         maxAmountOfBets = _maximumAmountOfBets;
 
@@ -51,7 +51,7 @@ contract Casino {
 
 
     // Checks if a player is in the current game
-    function checkIfPlayerExists(address player) public returns (bool){
+    function checkIfPlayerExists(address player) public view returns (bool){
         if(playerBetsNumber[player] > 0) {
             return true;
         }
@@ -74,14 +74,47 @@ contract Casino {
 
         //Add the user address to the list of punters for a particular number;
         numberBetPlayers[numberToBet].push(msg.sender);
+        //players.push(msg.sender);
 
         numberOfBets ++;
         totalBet ++;
 
         if(numberOfBets >= maxAmountOfBets){
-            //Generate number winner
+           GenerateRandomNumber();
         }
     }
+
+    function GenerateRandomNumber () private  returns(uint){
+        uint random_number = uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, players)));
+
+        winningNumber = random_number % 10 + 1;
+
+        distributePrizes();
+    }
+
+
+// Send Ether to winners and reset the game.
+function distributePrizes() private onEndGame {
+    uint winnerEtherAmount = totalBet / numberBetPlayers[winningNumber].length;
+
+    //numberBetPlayers[winningNumber] pulls out the number and voters attached
+
+    //Loop through the winners and send ether to them
+
+    for(uint i= 0; i<numberBetPlayers[winningNumber].length; i++){
+        
+        payable(numberBetPlayers[winningNumber][i]).transfer(winnerEtherAmount);
+    }
+
+
+    // for(uint i= 1; i <= 10; i++){
+    //     numberBetPlayers[i].length = 0;
+    // }
+
+    totalBet =0;
+    numberOfBets =0;
+}
+    
 
 
 }
