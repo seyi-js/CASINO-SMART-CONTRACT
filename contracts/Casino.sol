@@ -14,7 +14,7 @@ contract Casino {
     uint public numberOfBets;
 
     //Maximum amount of bets that can be made for each game
-    uint public maxAmountOfBets = 10;
+    uint public maxAmountOfBets = 2;
 
     //Betting limit to avoid excess gas consumption
     uint public constant BETS_LIMIT = 100;
@@ -22,7 +22,7 @@ contract Casino {
     //Winning number
     uint public winningNumber;
 
-    Player[] private winners;
+    Player[] public winners;
 
     struct Player {
         address addr;//User Address
@@ -39,8 +39,8 @@ contract Casino {
     }
 
 
-    constructor()  {
-        InititateCasino(1,10);
+    constructor() public {
+        InititateCasino(1,2);
     }
     function InititateCasino(uint _minimumBet, uint _maximumAmountOfBets) private{
         
@@ -56,7 +56,7 @@ contract Casino {
 
 
     // Checks if a player is in the current game
-    function checkIfPlayerExists(address player) public view returns (bool){
+    function checkIfPlayerExists(address player) private returns (bool){
         bool answer = false;
         for(uint i = 0; i < players.length; i++){
             if(players[i].addr == player){
@@ -75,7 +75,7 @@ contract Casino {
         require(!checkIfPlayerExists(msg.sender), "User exists.");
 
 
-        require(numberToBet >= 1 && numberToBet <=10, "number to bet must be between 1 - 10.");
+        require(numberToBet >= 1 && numberToBet <=2, "number to bet must be between 1 - 10.");
 
         require(msg.value >= minimumBet, "Amount cannot be less than 0.1 ether ");
 
@@ -100,13 +100,13 @@ contract Casino {
     function GenerateRandomNumber () private{
         uint random_number = uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp)));
 
-        winningNumber = random_number % 10 + 1;
+        winningNumber = random_number % maxAmountOfBets + 1;
 
         distributePrizes();
     }
 
 
-    function GetWinners() private returns(Player[] storage){
+    function GetWinners() private {
        
 
         for(uint i =0; i < players.length;  i++){
@@ -115,28 +115,24 @@ contract Casino {
             }
         }
 
-        return winners;
     }
 
 // Send Ether to winners and reset the game.
 function distributePrizes() private onEndGame {
 
 
-
-    uint winnerEtherAmount = totalBet /winners.length;
-
-
+    GetWinners();
+    uint winnerEtherAmount = totalBet / winners.length;
     //Loop through the winners and send ether to them
-
-    for(uint i= 0; i<winners.length; i++){
+    for(uint i= 0; i < winners.length; i++){
         
         payable(winners[i].addr).transfer(winnerEtherAmount);
     }
-
-
     
 
     delete winners;
+
+    delete players;
 
     totalBet =0;
     numberOfBets =0;
