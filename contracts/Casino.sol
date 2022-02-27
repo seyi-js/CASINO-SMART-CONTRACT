@@ -22,14 +22,15 @@ contract Casino {
     //Winning number
     uint public winningNumber;
 
-    address[] public  players;
+    Player[] private winners;
 
+    struct Player {
+        address addr;//User Address
+        uint number;//The number that was voted for;
+    }
 
-    //Each number has an array of players betting on it. Associate each number with a bunch of players.
-    mapping(uint => address[]) public numberBetPlayers;
+    Player[] public  players;
 
-    //The number that each player has bet on
-    mapping(address => uint) public playerBetsNumber;
 
 
     modifier onEndGame(){
@@ -38,7 +39,7 @@ contract Casino {
     }
 
 
-    constructor() public {
+    constructor()  {
         InititateCasino(1,10);
     }
     function InititateCasino(uint _minimumBet, uint _maximumAmountOfBets) private{
@@ -56,11 +57,16 @@ contract Casino {
 
     // Checks if a player is in the current game
     function checkIfPlayerExists(address player) public view returns (bool){
-        if(playerBetsNumber[player] > 0) {
-            return true;
-        }
+        bool answer = false;
+        for(uint i = 0; i < players.length; i++){
+            if(players[i].addr == player){
+                answer = true;
+                break;
+            }
 
-        return false;
+
+        }
+        return answer;
     }
 
     function bet(uint numberToBet) public payable{
@@ -74,11 +80,14 @@ contract Casino {
         require(msg.value >= minimumBet, "Amount cannot be less than 0.1 ether ");
 
 
-        playerBetsNumber[msg.sender] = numberToBet;
+        Player memory thePlayer =Player({
+            addr:msg.sender,
+            number:numberToBet
+        });
 
-        //Add the user address to the list of punters for a particular number;
-        numberBetPlayers[numberToBet].push(msg.sender);
-        //players.push(msg.sender);
+        players.push(thePlayer);
+
+       
 
         numberOfBets ++;
         totalBet ++;
@@ -88,8 +97,8 @@ contract Casino {
         }
     }
 
-    function GenerateRandomNumber () private  returns(uint){
-        uint random_number = uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp, players)));
+    function GenerateRandomNumber () private{
+        uint random_number = uint(keccak256(abi.encodePacked(block.difficulty, block.timestamp)));
 
         winningNumber = random_number % 10 + 1;
 
@@ -97,23 +106,37 @@ contract Casino {
     }
 
 
+    function GetWinners() private returns(Player[] storage){
+       
+
+        for(uint i =0; i < players.length;  i++){
+            if(players[i].number == winningNumber){
+                winners.push(players[i]);
+            }
+        }
+
+        return winners;
+    }
+
 // Send Ether to winners and reset the game.
 function distributePrizes() private onEndGame {
-    uint winnerEtherAmount = totalBet / numberBetPlayers[winningNumber].length;
 
-    //numberBetPlayers[winningNumber] pulls out the number and voters attached
+
+
+    uint winnerEtherAmount = totalBet /winners.length;
+
 
     //Loop through the winners and send ether to them
 
-    for(uint i= 0; i<numberBetPlayers[winningNumber].length; i++){
+    for(uint i= 0; i<winners.length; i++){
         
-        payable(numberBetPlayers[winningNumber][i]).transfer(winnerEtherAmount);
+        payable(winners[i].addr).transfer(winnerEtherAmount);
     }
 
 
-    // for(uint i= 1; i <= 10; i++){
-    //     numberBetPlayers[i].length = 0;
-    // }
+    
+
+    delete winners;
 
     totalBet =0;
     numberOfBets =0;
