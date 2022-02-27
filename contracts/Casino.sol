@@ -122,6 +122,10 @@ function distributePrizes() private onEndGame {
 
 
     GetWinners();
+
+    //Check that there are winners before looping.
+
+    
     uint winnerEtherAmount = totalBet / winners.length;
     //Loop through the winners and send ether to them
     for(uint i= 0; i < winners.length; i++){
