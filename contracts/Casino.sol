@@ -37,7 +37,11 @@ contract Casino {
         _;
     }
 
-    function InititateCasino(uint _minimumBet, uint _maximumAmountOfBets) public{
+
+    constructor() public {
+        InititateCasino(1,10);
+    }
+    function InititateCasino(uint _minimumBet, uint _maximumAmountOfBets) private{
         
 
         require(_minimumBet > 0, "Minimum bet must be greater than 0.");
