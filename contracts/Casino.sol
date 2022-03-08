@@ -38,6 +38,7 @@ contract Casino {
         _;
     }
 
+    event winner(address _winner, uint _amount);
 
     constructor() public {
         InititateCasino(1,10);
@@ -131,6 +132,8 @@ function distributePrizes() private onEndGame {
     for(uint i= 0; i < winners.length; i++){
         
         payable(winners[i].addr).transfer(winnerEtherAmount);
+
+        emit winner(winners[i].addr, winnerEtherAmount);
     }
     
 
